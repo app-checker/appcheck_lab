@@ -1,9 +1,9 @@
 <script setup lang="ts">
-
+import Lab from './pages/Lab.vue'
 </script>
 
 <template>
-  <div>hello world</div>
+  <Lab />
 </template>
 
 <style>
