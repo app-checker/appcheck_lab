@@ -2,14 +2,27 @@
   <div>
     <input @change="handleBindFile($event)" type="file">
     <div v-if="data != null" class="apk_info">
+      <div>
+        <p v-if="isUsedKotlin != null && isUsedKotlin">该软件使用了 Kotlin</p>
+        <p v-if="arch.length >= 1">
+          架构: <span v-for="(item, index) in arch" :key="index">{{ item }} {{ (index < arch.length - 1) ? '| ' : ''  }} </span>
+        </p>
+      </div>
       <ul>
         <li v-for="(v, k) in data">
           <p v-if="!isArray(v)">{{ k }} : {{ v }}</p>
           <ul v-else>
+            <p>权限: </p>
             <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px" v-for="(item, index) in v">
               {{ item }}
             </li>
           </ul>
+        </li>
+      </ul>
+      <p>使用的库: </p>
+      <ul>
+        <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px" v-for="(item, index) in libs" :key="index">
+          {{ item }}
         </li>
       </ul>
     </div>
@@ -20,8 +33,15 @@
 import { isArray } from '@vue/shared';
 import { ref } from 'vue'
 import { ApkManifest, ApkUtilsImpl } from '@/apk';
+import { ApkAnalyzeImpl } from '@/apk/analyze';
 
 const data = ref<ApkManifest | null>()
+
+const isUsedKotlin = ref<boolean | null>(null)
+
+const arch = ref<string[]>([])
+
+const libs = ref<string[]>([])
 
 async function handleBindFile(event: Event) {
   const _event = event as any
@@ -32,6 +52,10 @@ async function handleBindFile(event: Event) {
   const apk = new ApkUtilsImpl(_file)
   await apk.init()
   if (!apk.isApk()) return
+  const analyze = new ApkAnalyzeImpl(apk)
+  arch.value = analyze.getArchAsString()
+  libs.value = await analyze.getLibs()
+  isUsedKotlin.value = analyze.isUsedKotlin()
   const apkManifest = await apk.getApkManifest()
   data.value = apkManifest
 }

@@ -81,7 +81,7 @@ class ApkUtilsImpl implements ApkUtils {
 
   #file: File
 
-  #files = new Map<string, ZIP.JSZipObject>()
+  files = new Map<string, ZIP.JSZipObject>()
 
   constructor(file: File) {
     this.#file = file
@@ -90,12 +90,12 @@ class ApkUtilsImpl implements ApkUtils {
 
   public async getApkManifest(): Promise<ApkManifest> {
 
-    const resources = await this.#files.get('resources.arsc')?.async('arraybuffer')
+    const resources = await this.files.get('resources.arsc')?.async('arraybuffer')
     if (!resources) {
       throw new ParseApkError('resources.arsc not found')
     }
     
-    const manifest = this.#files.get('AndroidManifest.xml')
+    const manifest = this.files.get('AndroidManifest.xml')
     if (!manifest) {
       throw new ZipFileError('manifest file not found')
     }
@@ -173,7 +173,7 @@ class ApkUtilsImpl implements ApkUtils {
     try {
       const _files = await this.#zip.loadAsync(this.#file)
       _files.forEach((path: string, file) => {
-        this.#files.set(path, file)
+        this.files.set(path, file)
       })
     } catch (error) {
       throw new ParseApkError(error as any)
@@ -185,7 +185,7 @@ class ApkUtilsImpl implements ApkUtils {
    * @returns {boolean}
    */
   public isApk(): boolean {
-    return this.#files.size >= 1
+    return this.files.size >= 1
   }
 
 }
