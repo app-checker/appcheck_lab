@@ -4,6 +4,7 @@
     <div v-if="data != null" class="apk_info">
       <div v-if="appIcon != null" style="margin-top: 24px">
         <img width="120" :src="appIcon" style="border-radius: 24px" />
+        <h1 style="font-size: 1.8em">{{ data['applicationName'] }}</h1>
       </div>
       <div>
         <p v-if="isUsedKotlin != null && isUsedKotlin">该软件使用了 Kotlin</p>
@@ -14,13 +15,13 @@
       <ul>
         <li v-for="(v, k) in data">
           <p v-if="!isArray(v)">
-            <template v-if="k != 'icon'">
+            <template v-if="k != 'icon' && k != 'applicationName'">
               {{ k }} : {{ v }}
             </template>
           </p>
           <ul v-else>
             <p>权限: </p>
-            <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px" v-for="(item, index) in v">
+            <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; font-size: .8rem;" v-for="(item, index) in v">
               {{ item }}
             </li>
           </ul>
@@ -28,12 +29,15 @@
       </ul>
       <p v-if="libs.length >= 1">使用的库: </p>
       <ul>
-        <li :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px" v-for="(item, index) in libs" :key="index">
-          {{ item.name }}
+        <li :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; display: flex; justify-content: space-between; padding: 12px;" v-for="(item, index) in libs" :key="index">
+          <div>{{ item.name }}</div>
+          <div v-if="item.label" style="border: 1px solid #333;padding: 6px;border-radius: 12px;cursor: pointer;" @click="handleClickNativeLib(item)">{{ item.label }}</div>
         </li>
       </ul>
     </div>
   </div>
+
+  <bottomModal :data="bottomModalData" ref="bottomModalVue" />
 </template>
 
 <script setup lang="ts">
@@ -42,7 +46,8 @@ import { ref, computed, onMounted } from 'vue'
 import { ApkManifest, ApkUtilsImpl } from '@/apk';
 import { ApkAnalyzeImpl } from '@/apk/analyze';
 import { arrayBufferToImage } from '@/apk/browser';
-import { ApkRuleItemModel, ApkRules } from '@/apk/rules';
+import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules } from '@/apk/rules';
+import bottomModal from '@/components/bottom_modal.vue'
 
 const apkRules = new ApkRules();
 
@@ -50,7 +55,11 @@ onMounted(async ()=> {
   await apkRules.init()
 })
 
+const bottomModalVue = ref<InstanceType<typeof bottomModal>>()
+
 const data = ref<ApkManifest | null>()
+
+const bottomModalData = ref<ApkNativeLibItemModel | null>(null)
 
 const appIcon = computed(()=> {
   const value = data.value
@@ -93,6 +102,12 @@ async function handleBindFile(event: Event) {
     alert(error)
   }
 }
+
+async function handleClickNativeLib(item: ApkRuleItemModel) {
+  const data = await ApkRules.getLibInfo(item)
+  bottomModalData.value = data
+  bottomModalVue.value?.showModal()
+}
 </script>
 
 <style scoped>
@@ -106,4 +121,5 @@ ul li {
   border-radius: 12px;
   margin: 24px;
 }
+
 </style>

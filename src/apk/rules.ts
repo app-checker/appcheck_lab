@@ -7,6 +7,16 @@ export interface ApkRuleItemModel {
   regexName: string | null
 }
 
+export interface ApkNativeLibItemModel {
+  label: string;
+  team: string;
+  iconUrl: string;
+  contributors: string[];
+  description: string;
+  relativeUrl: string;
+}
+
+
 class ApkRules {
   #_key = "https://api.jsonbin.io/b/62a1b175449a1f38210201ea"
 
@@ -58,6 +68,17 @@ class ApkRules {
       return eqName
     })
     return Object.assign({}, lib, { name: libName, })
+  }
+
+  static async getLibInfo(lib: ApkRuleItemModel): Promise<ApkNativeLibItemModel> {
+    const { name, regexName, isRegexRule } = lib
+    const baseURL = `https://raw.githubusercontent.com/zhaobozhen/LibChecker-Rules/master/native-libs/`
+    let url = `${ baseURL }${ name }.json`
+    if (isRegexRule) {
+      url = `${ baseURL }regex/${ regexName }.json`
+    }
+    const data = await (await fetch(url)).json() as ApkNativeLibItemModel
+    return data
   }
 
 }
