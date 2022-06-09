@@ -57,6 +57,7 @@ export interface ApkManifest {
   targetSdkVersion: number,
   permissionList: string[],
   applicationName: string,
+  icon: ArrayBuffer,
 }
 
 export type ApkManifestRootAttrName = 'versionCode'
@@ -67,6 +68,7 @@ export type ApkManifestRootAttrName = 'versionCode'
   | 'targetSdkVersion'
   | 'applicationName'
   | 'package'
+  | 'icon'
 
 
 interface ApkUtils {
@@ -87,27 +89,86 @@ class ApkUtilsImpl implements ApkUtils {
     this.#file = file
   }
 
+  #resourcesFilename = 'resources.arsc'
+
+  #androidManifestFilename = 'AndroidManifest.xml'
+
+  #icLauncher = 'ic_launcher.png';
+
+  async #getResources(): Promise<ArrayBuffer | undefined> {
+    const resources = await this.files.get(this.#resourcesFilename)?.async('arraybuffer')
+    return resources
+  }
+
+  async #getAndroidMainfest(): Promise<AxmlRoot | undefined> {
+    const manifest = await this.files.get(this.#androidManifestFilename)?.async('arraybuffer')
+    if (!manifest) return
+    const buffer = Buffer.from(manifest)
+    const Axml = axml.parse<AxmlRoot>(buffer)
+    return Axml
+  }
+
+  #getApkLabl(rawValue: string,resourceTable: ResourceTable): string {
+    if (ApkUtilsSymbol.is(rawValue)) {
+      const value = (new ApkUtilsSymbol(rawValue)).value
+      const execValue = resourceTable.getResource(value)
+      return execValue
+    }
+    return rawValue
+  }
+
+  async #getApkIcon(rawValue: string, resourceTable: ResourceTable): Promise<ArrayBuffer> {
+    if (ApkUtilsSymbol.is(rawValue)) {
+      const value = (new ApkUtilsSymbol(rawValue)).value
+      const execPath = resourceTable.getResource(value)
+      if (this.files.has(execPath)) {
+
+        const isXml = execPath.endsWith('.xml')
+        // const isImage = execPath.endsWith('.jpg') || execPath.endsWith('.png')
+
+        // FIXME: 不支持 xml
+        if (isXml) {
+          throw new ParseApkError(`icon ${execPath} is xml(no support)`)
+        }
+        const file = this.files.get(execPath) as ZIP.JSZipObject
+        const arraybuffer = await file.async('arraybuffer')
+        return arraybuffer
+      }
+    }
+    const iconTables = Array.from(this.files).filter(item=> {
+      const [ filename ] = item
+      return filename.endsWith(this.#icLauncher)
+    })
+    if (iconTables.length > 0) {
+      const targetIndex = 0
+      const target = iconTables[targetIndex]
+      const [ _, file ] = target
+      const arraybuffer = await file.async('arraybuffer')
+      return arraybuffer
+    }
+    throw new ParseApkError('get icon not found')
+  }
 
   public async getApkManifest(): Promise<ApkManifest> {
 
-    const resources = await this.files.get('resources.arsc')?.async('arraybuffer')
+    const resources = await this.#getResources()
     if (!resources) {
-      throw new ParseApkError('resources.arsc not found')
+      throw new ParseApkError(`${ this.#resourcesFilename } not found`)
     }
     
-    const manifest = this.files.get('AndroidManifest.xml')
-    if (!manifest) {
-      throw new ZipFileError('manifest file not found')
+    const Axml = await this.#getAndroidMainfest()
+    if (!Axml) {
+      throw new ParseApkError(`${ this.#androidManifestFilename } not found`)
     }
-    const xmlBody = await manifest.async('arraybuffer')
-    const buffer: Buffer = Buffer.from(xmlBody)
-    const Axml = axml.parse<AxmlRoot>(buffer)
-    const map = new Map<ApkManifestRootAttrName, string | number>()
+
+    const map = new Map<ApkManifestRootAttrName, string | number | ArrayBuffer>()
     Axml.attrs.forEach(item=> {
       const name = item.name as ApkManifestRootAttrName
       const value = item.value
       map.set(name, value)
     })
+
+
     const UsesSDK = Axml.children.find(item=> {
       return item.localName == 'uses-sdk'
     })
@@ -119,6 +180,7 @@ class ApkUtilsImpl implements ApkUtils {
       const value = item.value
       map.set(name, value)
     })
+
     const permissions: AxmlChildren[] = []
     let application: AxmlChildren | null = null
     Axml.children.forEach(item=> {
@@ -129,24 +191,42 @@ class ApkUtilsImpl implements ApkUtils {
         application = item
       }
     })
+
     
     if (!application) {
       throw new ParseApkError('application not found')
     }
-    const item = (application as AxmlChildren).attrs.find(item=> {
-      return item.name == 'label'
+
+    // [0] => label
+    // [1] => icon
+    const labelAndIcon: string[] = []
+
+    ;(application as AxmlChildren).attrs.every(item=> {
+      if (labelAndIcon.length == 2) return false
+      const name = item.name
+      const value = item.value as string
+      if (name == 'label') {
+        labelAndIcon.push(value) 
+      } else if (name == 'icon') {
+        if (labelAndIcon.length == 1) {
+          labelAndIcon.push(value)
+        } else {
+          labelAndIcon.unshift(value)
+        }
+      }
+      return true
     })
-    if (!item) {
-      throw new ParseApkError('application label not found')
+
+    if (labelAndIcon.length <= 1) {
+      throw new ParseApkError('application label icon not found')
     }
-    let value = item.value as string
-    const apkUtilsSymbol = new ApkUtilsSymbol(value)
-    if (apkUtilsSymbol.isString || apkUtilsSymbol.isID) {
-      const resourceTable = new ResourceTable(resources)
-      const pointValue = apkUtilsSymbol.value
-      value = resourceTable.getResource(pointValue)
-    }
-    map.set('applicationName', value)
+
+    const resourceTable = new ResourceTable(resources)
+    const labelValue = this.#getApkLabl(labelAndIcon[0], resourceTable)
+    const iconValue = await this.#getApkIcon(labelAndIcon[1], resourceTable)
+
+    map.set('icon', iconValue)
+    map.set('applicationName', labelValue)
 
     const _ps = permissions.map(item=> {
       try {
@@ -165,6 +245,7 @@ class ApkUtilsImpl implements ApkUtils {
       targetSdkVersion: map.get('targetSdkVersion'),
       permissionList: _ps,
       applicationName: map.get('applicationName'),
+      icon: map.get('icon'),
     }
     return result
   }
@@ -193,35 +274,54 @@ class ApkUtilsImpl implements ApkUtils {
 enum ApkUtilsSymbols {
   id = 'id',
   string = 'string',
+  ref = 'ref',
 }
 
 class ApkUtilsSymbol {
 
+  get #_sybs(): Map<string, string> {
+    const map = new Map<string, string>()
+    Object.keys(ApkUtilsSymbols)
+      .filter((v) => Number.isNaN(+v))
+      .forEach(item=> {
+        map.set(item, ApkUtilsSymbol.createTemplate(item))
+      })
+    return map
+  }
+
   #value: string
 
-  #easyAppend(value: ApkUtilsSymbols): string {
-    return `@${ value }/`
+  static createTemplate(scoped: string): string {
+    return `@${ scoped }/`
   }
 
   constructor(value: string) {
     this.#value = value
   }
 
-  get isID() {
-    return this.#value.startsWith(this.#easyAppend(ApkUtilsSymbols.id)) 
-  }
-
-  get isString(): boolean {
-    return this.#value.startsWith(this.#easyAppend(ApkUtilsSymbols.string))
+  static is(value: string): boolean {
+    const kyes: string[] = Object.keys(ApkUtilsSymbols)
+      .filter((v) => Number.isNaN(+v))
+      .map(item=> {
+        return ApkUtilsSymbol.createTemplate(item)
+      })
+    
+    return kyes.some(item=> {
+      return value.startsWith(item)
+    })
   }
 
   get value(): number {
-    let _type = ApkUtilsSymbols.id
-    if (this.isString) {
-      _type = ApkUtilsSymbols.string
-    } 
-    const _split = this.#easyAppend(_type)
-    const result = this.#value.split(_split)[1]
+    let result = ''
+    const _value = this.#value
+    Array.from(this.#_sybs.values()).every(item=> {
+      if (_value.startsWith(item)) {
+        const tryItem = _value.split(item)[1]
+        result = tryItem
+        return false
+      }
+      return true
+    })
     return Number.parseInt(result, 16)
   }
   

@@ -2,6 +2,9 @@
   <div>
     <input @change="handleBindFile($event)" type="file">
     <div v-if="data != null" class="apk_info">
+      <div v-if="appIcon != null" style="margin-top: 24px">
+        <img width="120" :src="appIcon" style="border-radius: 24px" />
+      </div>
       <div>
         <p v-if="isUsedKotlin != null && isUsedKotlin">该软件使用了 Kotlin</p>
         <p v-if="arch.length >= 1">
@@ -10,7 +13,11 @@
       </div>
       <ul>
         <li v-for="(v, k) in data">
-          <p v-if="!isArray(v)">{{ k }} : {{ v }}</p>
+          <p v-if="!isArray(v)">
+            <template v-if="k != 'icon'">
+              {{ k }} : {{ v }}
+            </template>
+          </p>
           <ul v-else>
             <p>权限: </p>
             <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px" v-for="(item, index) in v">
@@ -31,11 +38,18 @@
 
 <script setup lang="ts">
 import { isArray } from '@vue/shared';
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { ApkManifest, ApkUtilsImpl } from '@/apk';
 import { ApkAnalyzeImpl } from '@/apk/analyze';
+import { arrayBufferToImage } from '@/apk/browser';
 
 const data = ref<ApkManifest | null>()
+
+const appIcon = computed(()=> {
+  const value = data.value
+  if (!value) return
+  return arrayBufferToImage(value.icon)
+})
 
 const isUsedKotlin = ref<boolean | null>(null)
 
