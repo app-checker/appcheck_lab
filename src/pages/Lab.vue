@@ -19,13 +19,14 @@
               {{ k }} : {{ v }}
             </template>
           </p>
-          <ul v-else>
-            <p>权限: </p>
-            <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; font-size: .8rem;" v-for="(item, index) in v">
-              {{ item }}
-            </li>
-          </ul>
         </li>
+        <ul>
+          <p>权限: </p>
+          <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 12px; font-size: .8rem; text-align: left;padding: 12px 24px;" v-for="(item, index) in permissions" :key="index">
+            <h4 style="font-size: 16px;font-weight: bold;">{{ item.permission }}</h4>
+            <p>{{ item.desc }}</p>
+          </li>
+        </ul>
       </ul>
       <p v-if="libs.length >= 1">使用的库: </p>
       <ul>
@@ -48,6 +49,7 @@ import { ApkAnalyzeImpl } from '@/apk/analyze';
 import { arrayBufferToImage } from '@/apk/browser';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
+import * as PermissionsData from '@/apk/permission'
 
 const apkRules = new ApkRules();
 
@@ -72,6 +74,22 @@ const isUsedKotlin = ref<boolean | null>(null)
 const arch = ref<string[]>([])
 
 const libs = ref<ApkRuleItemModel[]>([])
+
+const permissions = computed<PermissionsData.permissionModal[]>(()=> {
+  const value = data.value
+  if (!value) return []
+  return value.permissionList.map(item=> {
+    const _sp = item.split('.')
+    const _const = _sp[_sp.length - 1]
+    const desc = PermissionsData.getPermissionDesc(_const)
+    let permission = item
+    if (!!desc) permission = _const
+    return <PermissionsData.permissionModal>{
+      permission,
+      desc,
+    }
+  }) as PermissionsData.permissionModal[]
+})
 
 async function handleBindFile(event: Event) {
   const _event = event as any
