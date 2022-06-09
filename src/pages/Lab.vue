@@ -64,14 +64,18 @@ async function handleBindFile(event: Event) {
   if (file?.length <= 0) return
   const _file = file[0]
   const apk = new ApkUtilsImpl(_file)
-  await apk.init()
-  if (!apk.isApk()) return
-  const analyze = new ApkAnalyzeImpl(apk)
-  arch.value = analyze.getArchAsString()
-  libs.value = await analyze.getLibs()
-  isUsedKotlin.value = analyze.isUsedKotlin()
-  const apkManifest = await apk.getApkManifest()
-  data.value = apkManifest
+  try {
+    await apk.init()
+    if (!apk.isApk()) return
+    const analyze = new ApkAnalyzeImpl(apk)
+    const apkManifest = await apk.getApkManifest()
+    arch.value = analyze.getArchAsString()
+    libs.value = await analyze.getLibs()
+    isUsedKotlin.value = analyze.isUsedKotlin()
+    data.value = apkManifest
+  } catch (error) {
+    alert(error)
+  }
 }
 </script>
 
