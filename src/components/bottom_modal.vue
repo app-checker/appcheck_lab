@@ -4,7 +4,7 @@
     <template v-if="data != null">
       <h1 style="font-size: 1.8em; margin-bottom: 42px;">{{ data.team }}</h1>
       <p>{{ data.description }}</p>
-      <a :href="data.relativeUrl">{{ data.label }}</a>
+      <a :href="data.relativeUrl" target="_blank">{{ data.label }}</a>
     </template>
     <p v-else>未知错误</p>
   </div>
