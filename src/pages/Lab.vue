@@ -4,9 +4,10 @@
     <div v-if="data != null" class="apk_info">
 
       <div style="margin: 24px">
-        <div v-if="appIcon != null" style="margin: 24px 0; display:flex;">
+        <div v-if="data.icon != null" style="margin: 24px 0; display:flex;">
           <div>
-            <img width="120" :src="appIcon" style="border-radius: 24px" />
+            <appIconVue :width="120" :height="120" :data="data.icon" :border-radius="24"/>
+            <!-- <img width="120" :src="appIcon" style="border-radius: 24px" /> -->
           </div>
           <div style="width: 24px"></div>
           <div>
@@ -55,7 +56,6 @@
 </template>
 
 <script setup lang="ts">
-import { isArray } from '@vue/shared';
 import { ref, computed, onMounted } from 'vue'
 import { ApkManifest, ApkUtilsImpl } from '@/apk';
 import { ApkAnalyzeImpl } from '@/apk/analyze';
@@ -63,6 +63,7 @@ import { arrayBufferToImage } from '@/apk/browser';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
 import kotlinIcon from '@/components/kotlin_icon.vue'
+import appIconVue from '@/components/appicon.vue'
 import * as PermissionsData from '@/apk/permission'
 
 const apkRules = new ApkRules();
@@ -76,12 +77,6 @@ const bottomModalVue = ref<InstanceType<typeof bottomModal>>()
 const data = ref<ApkManifest | null>()
 
 const bottomModalData = ref<ApkNativeLibItemModel | null>(null)
-
-const appIcon = computed(()=> {
-  const value = data.value
-  if (!value) return
-  return arrayBufferToImage(value.icon)
-})
 
 const isUsedKotlin = ref<boolean | null>(null)
 

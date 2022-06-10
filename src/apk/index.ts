@@ -223,7 +223,12 @@ class ApkUtilsImpl implements ApkUtils {
 
     const resourceTable = new ResourceTable(resources)
     const labelValue = this.#getApkLabl(labelAndIcon[0], resourceTable)
-    const iconValue = await this.#getApkIcon(labelAndIcon[1], resourceTable)
+    let iconValue: ArrayBuffer = new ArrayBuffer(0)
+    try { 
+      iconValue = await this.#getApkIcon(labelAndIcon[1], resourceTable)
+    } catch (error) {
+      console.log(error)
+    }
 
     map.set('icon', iconValue)
     map.set('applicationName', labelValue)
