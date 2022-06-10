@@ -2,39 +2,52 @@
   <div>
     <input @change="handleBindFile($event)" type="file">
     <div v-if="data != null" class="apk_info">
-      <div v-if="appIcon != null" style="margin-top: 24px">
-        <img width="120" :src="appIcon" style="border-radius: 24px" />
-        <h1 style="font-size: 1.8em">{{ data['applicationName'] }}</h1>
+
+      <div style="margin: 24px">
+        <div v-if="appIcon != null" style="margin: 24px 0; display:flex;">
+          <div>
+            <img width="120" :src="appIcon" style="border-radius: 24px" />
+          </div>
+          <div style="width: 24px"></div>
+          <div>
+            <h1 style="font-size: 1.8em">{{ data['applicationName'] }}</h1>
+            <p>{{ data.packageName }}</p>
+            <p style="color: rgb(136 132 132);font-size:12px">{{ data.versionName }}({{ data.versionCode }})</p>
+            <p style="color: rgb(136 132 132);font-size:12px">targetSdkVersion {{ data.targetSdkVersion }},minSdkVersion {{ data.minSdkVersion }}</p>
+            <p style="margin-top: 6px" v-if="arch.length >= 1">
+              <span style="background: rgb(97 95 95); color: #fff; border-radius: 6px; display: inline-block; margin: 2px; padding: 4px 12px" v-for="(item, index) in arch" :key="index">{{ item }} </span>
+            </p>
+          </div>
+        </div>
+
+        <div v-if="isUsedKotlin != null && isUsedKotlin" style="display: flex;align-items: center;">
+          <div>
+            <kotlinIcon :width="42" :height="42" />
+          </div>
+          <span style="width: 3px"></span>
+          <div>
+            该项目使用了 Kotlin
+          </div>
+        </div>
+
       </div>
-      <div>
-        <p v-if="isUsedKotlin != null && isUsedKotlin">该软件使用了 Kotlin</p>
-        <p v-if="arch.length >= 1">
-          架构: <span v-for="(item, index) in arch" :key="index">{{ item }} {{ (index < arch.length - 1) ? '| ' : ''  }} </span>
-        </p>
-      </div>
+
+      <h2 class="subtitle"># 权限 </h2>
       <ul>
-        <li v-for="(v, k) in data">
-          <p v-if="!isArray(v)">
-            <template v-if="k != 'icon' && k != 'applicationName'">
-              {{ k }} : {{ v }}
-            </template>
-          </p>
+        <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 12px; font-size: .8rem; text-align: left;padding: 12px 24px;" v-for="(item, index) in permissions" :key="index">
+          <h4 style="font-size: 16px;font-weight: bold;">{{ item.permission }}</h4>
+          <p>{{ item.desc }}</p>
         </li>
-        <ul>
-          <p>权限: </p>
-          <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 12px; font-size: .8rem; text-align: left;padding: 12px 24px;" v-for="(item, index) in permissions" :key="index">
-            <h4 style="font-size: 16px;font-weight: bold;">{{ item.permission }}</h4>
-            <p>{{ item.desc }}</p>
-          </li>
-        </ul>
       </ul>
-      <p v-if="libs.length >= 1">使用的库: </p>
+
+      <h2 class="subtitle" v-if="libs.length >= 1"># 原生库 </h2>
       <ul>
-        <li :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; display: flex; justify-content: space-between; padding: 12px;" v-for="(item, index) in libs" :key="index">
+        <li :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; display: flex; justify-content: space-between; padding: 12px;align-items: center;" v-for="(item, index) in libs" :key="index">
           <div>{{ item.name }}</div>
           <div v-if="item.label" style="border: 1px solid #333;padding: 6px;border-radius: 12px;cursor: pointer;" @click="handleClickNativeLib(item)">{{ item.label }}</div>
         </li>
       </ul>
+
     </div>
   </div>
 
@@ -49,6 +62,7 @@ import { ApkAnalyzeImpl } from '@/apk/analyze';
 import { arrayBufferToImage } from '@/apk/browser';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
+import kotlinIcon from '@/components/kotlin_icon.vue'
 import * as PermissionsData from '@/apk/permission'
 
 const apkRules = new ApkRules();
@@ -135,9 +149,15 @@ ul li {
 .apk_info {
   width: 88vw;
   height: auto;
-  border: 1px solid #333;
   border-radius: 12px;
   margin: 24px;
+  text-align: left;
+}
+
+.subtitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 12px 24px;
 }
 
 </style>
