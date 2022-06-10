@@ -16,6 +16,8 @@ export interface ApkNativeLibItemModel {
   relativeUrl: string;
 }
 
+const apkRulesCacheMap = new Map<string, ApkNativeLibItemModel>()
+
 
 class ApkRules {
   #_key = "https://api.jsonbin.io/b/62a1b175449a1f38210201ea"
@@ -77,8 +79,13 @@ class ApkRules {
     if (isRegexRule) {
       url = `${ baseURL }regex/${ regexName }.json`
     }
-    const data = await (await fetch(url)).json() as ApkNativeLibItemModel
-    return data
+    const cacheData: ApkNativeLibItemModel | undefined = apkRulesCacheMap.get(url)
+    if (!cacheData) {
+      const data = await (await fetch(url)).json() as ApkNativeLibItemModel
+      apkRulesCacheMap.set(url, data)
+      return data
+    }
+    return cacheData
   }
 
 }
