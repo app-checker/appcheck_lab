@@ -50,6 +50,38 @@
       </ul>
 
     </div>
+
+    <div v-show="isParsing" style="display: flex;align-items: center;justify-content: center; margin-top: 24px">
+      <div class="vue-loading" style="fill: #333;width: 50px;height: 50px;">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 50 50" style="enable-background:new 0 0 50 50;" xml:space="preserve">
+          <path d="M43.935,25.145c0-10.318-8.364-18.683-18.683-18.683c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615c8.072,0,14.615,6.543,14.615,14.615H43.935z">
+          <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.6s" repeatCount="indefinite"></animateTransform>
+          </path>
+        </svg>
+      </div>
+      <div style="width: 24px"></div>
+      <div>
+        正在解析文件...
+      </div>
+    </div>
+
+    <div style="margin: 24px;
+    color: rgb(245, 108, 108);
+    font-size: 14px;
+    background-color: rgb(254, 240, 240);
+    display: flex;
+    text-align: left;
+    padding: 24px;
+    border-radius: 4px;
+    align-items: center;" v-if="!!parsingError && !isParsing">
+      <div>
+        <svg t="1654940109714" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2137" width="28" height="28"><path d="M512 0a512 512 0 0 0-512 512 512 512 0 0 0 512 512 512 512 0 0 0 512-512 512 512 0 0 0-512-512z" fill="#FD6B6D" p-id="2138"></path><path d="M513.755429 565.540571L359.277714 720.018286a39.058286 39.058286 0 0 1-55.296-0.073143 39.277714 39.277714 0 0 1 0.073143-55.442286l154.331429-154.331428-155.062857-155.136a36.571429 36.571429 0 0 1 51.712-51.785143l365.714285 365.714285a36.571429 36.571429 0 1 1-51.785143 51.785143L513.755429 565.540571z m157.549714-262.582857a35.254857 35.254857 0 1 1 49.737143 49.737143l-106.057143 108.982857a35.254857 35.254857 0 1 1-49.883429-49.810285l106.203429-108.982858z" fill="#FFFFFF" p-id="2139"></path></svg>
+      </div>
+      <div style="margin-left: 12px">
+        <p style="font-weight: bold;">解析Apk失败</p>
+        <p style="font-size: 12px">{{ parsingError }}</p>
+      </div>
+    </div>
   </div>
 
   <bottomModal :data="bottomModalData" ref="bottomModalVue" />
@@ -59,7 +91,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { ApkManifest, ApkUtilsImpl } from '@/apk';
 import { ApkAnalyzeImpl } from '@/apk/analyze';
-import { arrayBufferToImage } from '@/apk/browser';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
 import kotlinIcon from '@/components/kotlin_icon.vue'
@@ -84,6 +115,10 @@ const arch = ref<string[]>([])
 
 const libs = ref<ApkRuleItemModel[]>([])
 
+const isParsing = ref<boolean>(false)
+
+const parsingError = ref<string>('')
+
 const permissions = computed<PermissionsData.permissionModal[]>(()=> {
   const value = data.value
   if (!value) return []
@@ -107,7 +142,10 @@ async function handleBindFile(event: Event) {
   if (file?.length <= 0) return
   const _file = file[0]
   const apk = new ApkUtilsImpl(_file)
+  isParsing.value = true
+  parsingError.value = ''
   try {
+    data.value = null;
     await apk.init()
     if (!apk.isApk()) return
     const analyze = new ApkAnalyzeImpl(apk)
@@ -126,8 +164,10 @@ async function handleBindFile(event: Event) {
     isUsedKotlin.value = analyze.isUsedKotlin()
     data.value = apkManifest
   } catch (error) {
-    alert(error)
+    const msg = (error as Error).message
+    parsingError.value = msg
   }
+  isParsing.value = false
 }
 
 async function handleClickNativeLib(item: ApkRuleItemModel) {
@@ -154,5 +194,4 @@ ul li {
   font-weight: bold;
   margin: 12px 24px;
 }
-
 </style>
