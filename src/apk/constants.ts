@@ -3,14 +3,14 @@ enum ApkArchConstType {
   /**
    * arm64-v8a
    * 
-   * 第7代及以上的 ARM 处理器。2011年15月以后的生产的大部分Android设备都使用它.
+   * 第8代、64位ARM处理器，很少设备，三星 Galaxy S6是其中之一。
    */
   ARMV8,
 
   /**
    * armeabi-v7a
    * 
-   * 第8代、64位ARM处理器，很少设备，三星 Galaxy S6是其中之一。
+   * 第7代及以上的 ARM 处理器。2011年15月以后的生产的大部分Android设备都使用它.
    */
   ARMV7,
 
@@ -35,6 +35,14 @@ enum ApkArchConstType {
    */
   X86_64
 }
+
+const ApkArchConstMap = new Map<ApkArchConstType, string>([
+  [ApkArchConstType.ARMV8, "第8代、64位ARM处理器，很少设备，三星 Galaxy S6是其中之一。"],
+  [ApkArchConstType.ARMV7, "第7代及以上的 ARM 处理器。2011年15月以后的生产的大部分Android设备都使用它."],
+  [ApkArchConstType.ARMV5, "第5代、第6代的ARM处理器，早期的手机用的比较多。"],
+  [ApkArchConstType.X86, "平板、模拟器用得比较多。"],
+  [ApkArchConstType.X86_64, "64位的平板。"]
+]);
 
 class ApkArchConst {
   static ARMV8_STRING = "arm64-v8a"
@@ -81,6 +89,7 @@ class ApkArchConst {
 export {
   ApkArchConst,
   ApkArchConstType,
+  ApkArchConstMap
 }
 
 export default ApkArchConst

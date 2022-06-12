@@ -16,7 +16,7 @@
             <p style="color: rgb(136 132 132);font-size:12px">{{ data.versionName }}({{ data.versionCode }})</p>
             <p style="color: rgb(136 132 132);font-size:12px">targetSdkVersion {{ data.targetSdkVersion }},minSdkVersion {{ data.minSdkVersion }}</p>
             <p style="margin-top: 6px" v-if="arch.length >= 1">
-              <span style="background: rgb(97 95 95); color: #fff; border-radius: 6px; display: inline-block; margin: 2px; padding: 4px 12px" v-for="(item, index) in arch" :key="index">{{ item }} </span>
+              <span style="background: rgb(97 95 95); color: #fff; border-radius: 6px; display: inline-block; margin: 2px; padding: 4px 12px" v-for="(item, index) in arch" :key="index" :title="item[1]">{{ item[0] }} </span>
             </p>
           </div>
         </div>
@@ -111,7 +111,7 @@ const bottomModalData = ref<ApkNativeLibItemModel | null>(null)
 
 const isUsedKotlin = ref<boolean | null>(null)
 
-const arch = ref<string[]>([])
+const arch = ref<string[][]>([])
 
 const libs = ref<ApkRuleItemModel[]>([])
 

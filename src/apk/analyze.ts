@@ -1,6 +1,6 @@
 import JSZip from "jszip"
 import { ApkUtilsImpl } from "."
-import ApkArchConst, { ApkArchConstType } from "./constants"
+import ApkArchConst, { ApkArchConstType, ApkArchConstMap } from "./constants"
 
 type MapFile = Map<string, JSZip.JSZipObject>
 
@@ -30,7 +30,7 @@ interface ApkAnalyze {
    * 支持架构
    * @returns {string[]}
    */
-  getArchAsString(): string[]
+  getArchAsString(): string[][]
 
   /**
    * 获取使用的库
@@ -95,8 +95,12 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     return reulst
   }
 
-  getArchAsString(): string[] {
-    const result = this.getArch().map(item => ApkArchConst.toString(item))
+  getArchAsString(): string[][] {
+    const result = this.getArch().map(item => {
+      const id = ApkArchConst.toString(item)
+      const desc = ApkArchConstMap.get(item) ?? ""
+      return [ id, desc ] as string[]
+    })
     return result
   }
 
