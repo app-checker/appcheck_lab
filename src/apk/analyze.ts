@@ -86,7 +86,7 @@ class ApkAnalyzeImpl implements ApkAnalyze {
       if (isArchModule) {
         const archName = filename.split('/')[1]
         const archType = ApkArchConst.getArch(archName)
-        if (archType && !arch.has(archName as any) && archType !== ApkArchConstType.unknow) {
+        if (!arch.has(archName as any) && (archType as number) >= 0) {
           arch.add(archType)
         }
       }
