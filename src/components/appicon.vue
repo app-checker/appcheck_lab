@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, computed,  } from 'vue'
+import { computed } from 'vue'
 import { arrayBufferToImage } from '@/apk/browser';
 import appDefaultIcon from '@/components/appicon_default.vue'
 
