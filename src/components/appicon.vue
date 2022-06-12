@@ -1,9 +1,9 @@
 <template>
-  <div :style="{
-    borderRadius: `${borderRadius}px`,
-  }">
+  <div>
     <template v-if="!showDefaultImage">
-      <img :src="appIcon" :width="width" :height="height" />
+      <img :src="appIcon" :width="width" :height="height" :style="{
+        borderRadius: `${borderRadius}px`,
+      }" />
     </template>
     <appDefaultIcon :width="width" :height="height" v-else />
   </div>
