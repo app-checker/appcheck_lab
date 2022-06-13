@@ -18,6 +18,10 @@ export interface ApkNativeLibItemModel {
 
 const apkRulesCacheMap = new Map<string, ApkNativeLibItemModel>()
 
+export interface ReApkRuleItemModel extends ApkRuleItemModel {
+  reName: string | undefined
+}
+
 
 class ApkRules {
   #_key = "https://api.jsonbin.io/b/62a1b175449a1f38210201ea"
@@ -56,9 +60,13 @@ class ApkRules {
   }
 
   find(libName: string): ApkRuleItemModel | undefined {
+    let reName = ''
     const lib = this.#data.find(item=> {
       const name = item.name
-      const eqName = name == libName
+      const eqName = name.toLowerCase() == libName.toLowerCase()
+      if (eqName && libName != name) {
+        reName = name
+      }
       if (!eqName) {
         const isRegexRule = item.isRegexRule
         if (isRegexRule) {
@@ -69,13 +77,16 @@ class ApkRules {
       }
       return eqName
     })
-    return Object.assign({}, lib, { name: libName, })
+    return Object.assign({}, lib, { name: libName, reName })
   }
 
-  static async getLibInfo(lib: ApkRuleItemModel): Promise<ApkNativeLibItemModel> {
-    const { name, regexName, isRegexRule } = lib
+  static async getLibInfo(lib: ReApkRuleItemModel): Promise<ApkNativeLibItemModel> {
+    const { name, regexName, isRegexRule, reName } = lib
     const baseURL = `https://raw.githubusercontent.com/zhaobozhen/LibChecker-Rules/master/native-libs/`
     let url = `${ baseURL }${ name }.json`
+    if (!!reName) {
+      url = `${ baseURL }${ reName }.json`
+    }
     if (isRegexRule) {
       url = `${ baseURL }regex/${ regexName }.json`
     }

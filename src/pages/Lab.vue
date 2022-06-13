@@ -91,7 +91,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ApkManifest, ApkUtilsImpl } from '@/apk';
 import { ApkAnalyzeImpl } from '@/apk/analyze';
-import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules } from '@/apk/rules';
+import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules, ReApkRuleItemModel } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
 import kotlinIcon from '@/components/kotlin_icon.vue'
 import appIconVue from '@/components/appicon.vue'
@@ -171,7 +171,7 @@ async function handleBindFile(event: Event) {
 }
 
 async function handleClickNativeLib(item: ApkRuleItemModel) {
-  const data = await ApkRules.getLibInfo(item)
+  const data = await ApkRules.getLibInfo(item as ReApkRuleItemModel)
   bottomModalData.value = data
   bottomModalVue.value?.showModal()
 }
