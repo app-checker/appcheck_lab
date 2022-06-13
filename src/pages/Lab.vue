@@ -33,16 +33,22 @@
 
       </div>
 
-      <h2 class="subtitle"># 权限 </h2>
-      <ul>
+      <div class="bar">
+        <ul style="display: flex; font-size: 1.2em; background: #ececec; color: #787878; border-radius: 0.25rem; padding: 6px;">
+          <li @click="apkMenuBarCurrent = index" :class="[ index == apkMenuBarCurrent ? 'active shadow' : '' ]" v-for="(item, index) in apkMenuBar" :key="index">
+            {{ item.label }}
+          </li>
+        </ul>
+      </div>
+
+      <ul v-if="apkMenuBarCurrent == apkMenuBarAction.permission">
         <li style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 12px; font-size: .8rem; text-align: left;padding: 12px 24px;" v-for="(item, index) in permissions" :key="index">
           <h4 style="font-size: 16px;font-weight: bold;">{{ item.permission }}</h4>
           <p>{{ item.desc }}</p>
         </li>
       </ul>
 
-      <h2 class="subtitle" v-if="libs.length >= 1"># 原生库 </h2>
-      <ul>
+      <ul v-else-if="apkMenuBarCurrent == apkMenuBarAction.native">
         <li :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; display: flex; justify-content: space-between; padding: 12px;align-items: center;" v-for="(item, index) in libs" :key="index">
           <div>{{ item.name }}</div>
           <div v-if="item.label" style="border: 1px solid #333;padding: 6px;border-radius: 12px;cursor: pointer;" @click="handleClickNativeLib(item)">{{ item.label }}</div>
@@ -103,6 +109,29 @@ onMounted(async ()=> {
   await apkRules.init()
 })
 
+enum apkMenuBarAction {
+  permission,
+  native,
+  files
+}
+
+const apkMenuBar = [
+  {
+    label: '权限',
+    action: apkMenuBarAction.permission
+  },
+  {
+    label: '原生库',
+    action: apkMenuBarAction.native
+  },
+  {
+    label: '文件',
+    action: apkMenuBarAction.files
+  },
+]
+
+const apkMenuBarCurrent = ref<apkMenuBarAction>(apkMenuBarAction.permission)
+
 const bottomModalVue = ref<InstanceType<typeof bottomModal>>()
 
 const data = ref<ApkManifest | null>()
@@ -159,7 +188,6 @@ async function handleBindFile(event: Event) {
       }
       return lib
     })
-    // debugger
     libs.value = _libs
     isUsedKotlin.value = analyze.isUsedKotlin()
     data.value = apkManifest
@@ -193,5 +221,24 @@ ul li {
   font-size: 24px;
   font-weight: bold;
   margin: 12px 24px;
+}
+.shadow {
+  --tw-shadow: 0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1);
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color),0 1px 2px -1px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);
+}
+
+.bar li {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.42rem;
+  border-radius: 0.25rem;
+}
+
+.bar .active {
+  background: #fff;
 }
 </style>
