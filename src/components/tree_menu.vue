@@ -78,6 +78,7 @@ function toggle(item: any) {
 ul {
   list-style: none;
   margin: 10px 0;
+  margin-top: 1px;
 }
 
 /* li {
