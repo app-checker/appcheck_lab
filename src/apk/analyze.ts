@@ -1,6 +1,7 @@
 import JSZip from "jszip"
 import { ApkUtilsImpl } from "."
 import ApkArchConst, { ApkArchConstType, ApkArchConstMap } from "./constants"
+import { ApkTreeImpl, ZipTree } from "./tree"
 
 type MapFile = Map<string, JSZip.JSZipObject>
 
@@ -38,6 +39,11 @@ interface ApkAnalyze {
    */
   getLibs(): Promise<string[]>
 
+  /**
+   * 获取文件(树结构)
+   */
+  getFileTree(): Promise<ZipTree[]>
+
 }
 class ApkAnalyzeImpl implements ApkAnalyze {
 
@@ -53,13 +59,23 @@ class ApkAnalyzeImpl implements ApkAnalyze {
 
   constructor(apkUtils: ApkUtilsImpl) {
     this.#apkUtils = apkUtils
-    // this.init()
+    this.init()
+  }
+  async getFileTree(): Promise<ZipTree[]> {
+    const tree = this.#apkTree
+    if (!tree) return []
+    return tree.getTree()
   }
 
-  // async init() {
-  //   await this.getLibs()
-  //   this.isUsedKotlin()
-  // }
+  #apkTree: ApkTreeImpl | undefined
+
+  async init() {
+    const apkTree = new ApkTreeImpl(this.#files)
+    this.#apkTree = apkTree
+    await apkTree.init()
+    // await this.getLibs()
+    // this.isUsedKotlin()
+  }
 
   async getLibs(): Promise<string[]> {
     const reuslt: [string, JSZip.JSZipObject][] = []

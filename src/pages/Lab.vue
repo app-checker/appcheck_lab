@@ -55,6 +55,10 @@
         </li>
       </ul>
 
+      <div v-else>
+        <treeMenu :model="apkFileTree" />
+      </div>
+
     </div>
 
     <div v-show="isParsing" style="display: flex;align-items: center;justify-content: center; margin-top: 24px">
@@ -102,6 +106,8 @@ import bottomModal from '@/components/bottom_modal.vue'
 import kotlinIcon from '@/components/kotlin_icon.vue'
 import appIconVue from '@/components/appicon.vue'
 import * as PermissionsData from '@/apk/permission'
+import { ZipTree } from '@/apk/tree';
+import treeMenu from '@/components/tree_menu.vue';
 
 const apkRules = new ApkRules();
 
@@ -148,6 +154,8 @@ const isParsing = ref<boolean>(false)
 
 const parsingError = ref<string>('')
 
+const apkFileTree = ref<ZipTree[]>([])
+
 const permissions = computed<PermissionsData.permissionModal[]>(()=> {
   const value = data.value
   if (!value) return []
@@ -178,6 +186,7 @@ async function handleBindFile(event: Event) {
     await apk.init()
     if (!apk.isApk()) return
     const analyze = new ApkAnalyzeImpl(apk)
+    apkFileTree.value = await analyze.getFileTree()
     const apkManifest = await apk.getApkManifest()
     arch.value = analyze.getArchAsString()
     const _libs = (await analyze.getLibs()).map(item=> {
