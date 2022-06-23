@@ -26,8 +26,14 @@ const props = defineProps({
   },
   height: {
     type: Number,
-    default: 24,
+    default: -1,
   }
+})
+
+const height = computed<number>(()=> {
+  const { width, height: _height } = props
+  if (_height == -1) return width
+  return _height
 })
 
 const symbolId = computed(()=> {
