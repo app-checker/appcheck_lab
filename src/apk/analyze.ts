@@ -168,6 +168,22 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     return isNext
   }
 
+  async #isUsedUniapp(): Promise<boolean> {
+
+    /**
+     * FIXME: 不严谨的检测。。。
+     */
+    const findOnce = this.#filesArray.filter(item=> {
+      const [ filename ] = item
+      const _sp = filename.split('/')
+      const _now = _sp.find(subItem=> {
+        return subItem.indexOf('__UNI__') >= 0
+      })
+      return !!_now
+    })
+    return findOnce.length > 0
+  }
+
   async getTechnology(): Promise<ApkTechnologyModel[]> {
     const resultKey: ApkTechnologyID[] = []
 
@@ -179,6 +195,10 @@ class ApkAnalyzeImpl implements ApkAnalyze {
       {
         id: ApkTechnologyID.flutter,
         run: this.#isUsedFlutter,
+      },
+      {
+        id: ApkTechnologyID.uniapp,
+        run: this.#isUsedUniapp,
       },
       {
         id: ApkTechnologyID.iapp,
