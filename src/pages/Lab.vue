@@ -7,7 +7,6 @@
         <div v-if="data.icon != null" style="margin: 24px 0; display:flex;">
           <div>
             <appIconVue :width="120" :height="120" :data="data.icon" :border-radius="24"/>
-            <!-- <img width="120" :src="appIcon" style="border-radius: 24px" /> -->
           </div>
           <div style="width: 24px"></div>
           <div>
@@ -21,14 +20,17 @@
           </div>
         </div>
 
-        <div v-if="isUsedKotlin != null && isUsedKotlin" style="display: flex;align-items: center;">
-          <div>
-            <kotlinIcon :width="42" :height="42" />
-          </div>
-          <span style="width: 3px"></span>
-          <div>
-            该项目使用了 Kotlin
-          </div>
+        <div v-if="technology.length">
+          <ul>
+            <li :title="item.desc" style="display: flex; align-items: center; margin-top: 6px" v-for="(item, index) in technology" :key="index">
+              <div>
+                <svgIcon :width="32" :name="item.icon" />
+              </div>
+              <div style="margin-left: 6px">
+                <a target="_blank" :href="item.link" style="text-decoration: none; color: #333">该项目使用了 <span>{{ item.id }}</span></a>
+              </div>
+            </li>
+          </ul>
         </div>
 
       </div>
@@ -103,11 +105,12 @@ import { ApkManifest, ApkUtilsImpl } from '@/apk';
 import { ApkAnalyzeImpl } from '@/apk/analyze';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules, ReApkRuleItemModel } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
-import kotlinIcon from '@/components/kotlin_icon.vue'
 import appIconVue from '@/components/appicon.vue'
 import * as PermissionsData from '@/apk/permission'
 import { ZipTree } from '@/apk/tree';
 import treeMenu from '@/components/tree_menu.vue';
+import { ApkTechnologyModel } from '@/apk/platform';
+import svgIcon from '@/components/svg_icon.vue';
 
 const apkRules = new ApkRules();
 
@@ -115,6 +118,7 @@ onMounted(async ()=> {
   await apkRules.init()
 })
 
+console.log('dev')
 enum apkMenuBarAction {
   permission,
   native,
@@ -144,7 +148,7 @@ const data = ref<ApkManifest | null>()
 
 const bottomModalData = ref<ApkNativeLibItemModel | null>(null)
 
-const isUsedKotlin = ref<boolean | null>(null)
+const technology = ref<ApkTechnologyModel[]>([])
 
 const arch = ref<string[][]>([])
 
@@ -198,7 +202,7 @@ async function handleBindFile(event: Event) {
       return lib
     })
     libs.value = _libs
-    isUsedKotlin.value = analyze.isUsedKotlin()
+    technology.value = await analyze.getTechnology()
     data.value = apkManifest
   } catch (error) {
     const msg = (error as Error).message

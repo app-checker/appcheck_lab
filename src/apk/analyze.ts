@@ -1,6 +1,8 @@
 import JSZip from "jszip"
 import { ApkUtilsImpl } from "."
 import ApkArchConst, { ApkArchConstType, ApkArchConstMap } from "./constants"
+import { ApkTechnologyID, ApkTechnologyModel } from '@/apk/platform'
+import PlatformDataMap from '@/apk/platform'
 import { ApkTreeImpl, ZipTree } from "./tree"
 
 type MapFile = Map<string, JSZip.JSZipObject>
@@ -16,10 +18,9 @@ interface ApkAnalyze {
   // init(): Promise<void>
 
   /**
-   * 项目是否使用到了 `Kotlin`
-   * `zhaobozhen/LibChecker/app/src/main/kotlin/com/absinthe/libchecker/utils/PackageUtils.kt#L306`
+   * 使用技术栈
    */
-  isUsedKotlin(): boolean
+  getTechnology(): Promise<ApkTechnologyModel[]>
 
   /**
    * 支持架构
@@ -61,6 +62,7 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     this.#apkUtils = apkUtils
     this.init()
   }
+  
   async getFileTree(): Promise<ZipTree[]> {
     const tree = this.#apkTree
     if (!tree) return []
@@ -127,11 +129,42 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     'META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory',
   ]
 
-  isUsedKotlin(): boolean {
+  /**
+   * 项目是否使用到了 `Kotlin`
+   * `zhaobozhen/LibChecker/app/src/main/kotlin/com/absinthe/libchecker/utils/PackageUtils.kt#L306`
+   */
+  #isUsedKotlin(): boolean {
     const flag = this.#_kotlinRules.some(item => {
       return this.#files.get(item)
     })
     return flag
+  }
+  /**
+   * 项目是否使用到 `Flutter`
+   * @returns {Promise<boolean>}
+   */
+  async #isUsedFlutter(data?: string[],): Promise<boolean> {
+    const raw = data ? data : await this.getLibs()
+    return raw.includes('libapp.so') && raw.includes('libflutter.so')
+  }
+
+  async getTechnology(): Promise<ApkTechnologyModel[]> {
+    const resultKey: ApkTechnologyID[] = []
+
+    const isKotlin = this.#isUsedKotlin()
+    if (isKotlin) {
+      resultKey.push(ApkTechnologyID.kotlin)
+    }
+
+    const isUsedFlutter = await this.#isUsedFlutter()
+    if (isUsedFlutter) {
+      resultKey.push(ApkTechnologyID.flutter)
+    }
+
+    return resultKey.map(item=> {
+      const data = PlatformDataMap.get(item)
+      return data
+    }).filter(item=> !!item) as ApkTechnologyModel[]
   }
 
 }
