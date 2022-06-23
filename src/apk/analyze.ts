@@ -133,7 +133,7 @@ class ApkAnalyzeImpl implements ApkAnalyze {
    * 项目是否使用到了 `Kotlin`
    * `zhaobozhen/LibChecker/app/src/main/kotlin/com/absinthe/libchecker/utils/PackageUtils.kt#L306`
    */
-  #isUsedKotlin(): boolean {
+  async #isUsedKotlin(): Promise<boolean> {
     const flag = this.#_kotlinRules.some(item => {
       return this.#files.get(item)
     })
@@ -148,23 +148,58 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     return raw.includes('libapp.so') && raw.includes('libflutter.so')
   }
 
+  /**
+   * 项目是否使用到 `iapp`
+   * @link https://m.bamenshenqi.com/community/detail/post/427489.html
+   */
+  async #isUsedIAPP(): Promise<boolean> {
+    const extra_conf1g = this.#files.get('assets/extra_conf1g.xml')
+    const libSO = this.#files.get('assets/lib.so')
+    let flag = false
+    for (let item of this.#files) {
+      const filename = item[0]
+      const IF = filename.endsWith('libygsiyu.so')
+      if (IF) {
+        flag = true
+        break
+      }
+    }
+    const isNext = flag && !!extra_conf1g && !!libSO
+    return isNext
+  }
+
   async getTechnology(): Promise<ApkTechnologyModel[]> {
     const resultKey: ApkTechnologyID[] = []
 
-    const isKotlin = this.#isUsedKotlin()
-    if (isKotlin) {
-      resultKey.push(ApkTechnologyID.kotlin)
+    const mircoTasks = [
+      {
+        id: ApkTechnologyID.kotlin,
+        run: this.#isUsedKotlin,
+      },
+      {
+        id: ApkTechnologyID.flutter,
+        run: this.#isUsedFlutter,
+      },
+      {
+        id: ApkTechnologyID.iapp,
+        run: this.#isUsedIAPP,
+      },
+    ]
+
+    for (let item of mircoTasks) {
+      const taskBoolean = await item.run.bind(this)()
+      if (taskBoolean) {
+        resultKey.push(item.id)
+      }
     }
 
-    const isUsedFlutter = await this.#isUsedFlutter()
-    if (isUsedFlutter) {
-      resultKey.push(ApkTechnologyID.flutter)
-    }
-
-    return resultKey.map(item=> {
+    const result = resultKey.map(item=> {
       const data = PlatformDataMap.get(item)
       return data
     }).filter(item=> !!item) as ApkTechnologyModel[]
+
+    return result
+
   }
 
 }

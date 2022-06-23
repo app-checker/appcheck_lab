@@ -3,6 +3,7 @@ export enum ApkTechnologyID {
   flutter = 'flutter',
   uniapp = 'uniapp',
   reactNative = 'react_native',
+  iapp = 'iapp',
 }
 
 // enum ApkTechnologyType {
@@ -56,6 +57,12 @@ const data: ApkTechnologyModel[] = [
     desc: `React Native 是一个由 Facebook 于 2015 年 9 月发布的一款开源的 JavaScript 框架，它可以让开发者使用 JavaScript 和 React 来开发跨平台的移动应用。它既保留了 React 的开发效率，又同时拥有 Native 应用的良好体验，加上 Virtual DOM 跨平台的优势，实现了真正意义上的：Learn Once,Write Anywhere.`,
     link: 'https://reactnative.dev/',
     icon: 'reactnative_logo'
+  },
+  {
+    id: ApkTechnologyID.iapp,
+    desc: 'IApp是一款手机端的一款软件开发软件。 容易上手，轻松开发出自己的软件。 编程语言是俗语言Java的扩展性语言。 IApp 只需要懂一点英语的人都能凭借自己的智商走出一片天。',
+    link: 'http://www.yougais.com/',
+    icon: 'http://v.dayx.cn:93/images/201607010702506386.png',
   }
 ]
 
