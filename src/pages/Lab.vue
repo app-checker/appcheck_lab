@@ -23,10 +23,11 @@
         <div v-if="technology.length">
           <ul>
             <li :title="item.desc" style="display: flex; align-items: center; margin-top: 6px" v-for="(item, index) in technology" :key="index">
-              <div>
-                <svgIcon :width="32" :name="item.icon" />
+              <div v-if="item.icon.startsWith('http')">
+                <img style="vertical-align:middle;" width="32" height="32" :src="item.icon" />
               </div>
-              <div style="margin-left: 6px">
+              <svgIcon v-else :width="32" :name="item.icon" />
+              <div style="margin-left: 12px">
                 <a target="_blank" :href="item.link" style="text-decoration: none; color: #333">该项目使用了 <span>{{ item.id }}</span></a>
               </div>
             </li>
@@ -118,7 +119,6 @@ onMounted(async ()=> {
   await apkRules.init()
 })
 
-console.log('dev')
 enum apkMenuBarAction {
   permission,
   native,
