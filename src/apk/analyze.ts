@@ -130,6 +130,21 @@ class ApkAnalyzeImpl implements ApkAnalyze {
   ]
 
   /**
+   * 
+   * @param args 函数参数上下文
+   * @returns {Promise<string[]>}
+   */
+  async #easyGetLibsAsArgs(args: IArguments): Promise<string[]> {
+    let lib: string[] = []
+    if (args.length == 1) {
+      lib = args[0]
+    } else {
+      lib = await this.getLibs();
+    }
+    return lib
+  }
+
+  /**
    * 项目是否使用到了 `Kotlin`
    * `zhaobozhen/LibChecker/app/src/main/kotlin/com/absinthe/libchecker/utils/PackageUtils.kt#L306`
    */
@@ -143,8 +158,8 @@ class ApkAnalyzeImpl implements ApkAnalyze {
    * 项目是否使用到 `Flutter`
    * @returns {Promise<boolean>}
    */
-  async #isUsedFlutter(data?: string[],): Promise<boolean> {
-    const raw = data ? data : await this.getLibs()
+  async #isUsedFlutter(): Promise<boolean> {
+    const raw = await this.#easyGetLibsAsArgs(arguments)
     return raw.includes('libapp.so') && raw.includes('libflutter.so')
   }
 
@@ -184,8 +199,31 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     return findOnce.length > 0
   }
 
-  async getTechnology(): Promise<ApkTechnologyModel[]> {
+  async #isUsedReactNative(): Promise<boolean> {
+    const lib = await this.#easyGetLibsAsArgs(arguments)
+    const includes = [
+      'libfb.so',
+      'libfolly_json.so',
+      'libglog.so',
+      'libglog_init.so',
+      // 'libgnustl_shared.so',
+      'libjsc.so',
+      'libreactnativejni.so',
+      'libyoga.so'
+    ]
+    for (const item of lib) {
+      const index = includes.indexOf(item)
+      if (index >= 0) {
+        includes.splice(index, 1)
+      }
+    }
+    return includes.length == 0
+  }
+
+  async getTechnology(libs?: string[]): Promise<ApkTechnologyModel[]> {
     const resultKey: ApkTechnologyID[] = []
+
+    const _libs = libs ? libs : await this.getLibs()
 
     const mircoTasks = [
       {
@@ -195,6 +233,10 @@ class ApkAnalyzeImpl implements ApkAnalyze {
       {
         id: ApkTechnologyID.flutter,
         run: this.#isUsedFlutter,
+      },
+      {
+        id: ApkTechnologyID.reactNative,
+        run: this.#isUsedReactNative,
       },
       {
         id: ApkTechnologyID.uniapp,
@@ -207,7 +249,8 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     ]
 
     for (let item of mircoTasks) {
-      const taskBoolean = await item.run.bind(this)()
+      const runFunc = item.run as any
+      const taskBoolean = await runFunc.bind(this)(_libs)
       if (taskBoolean) {
         resultKey.push(item.id)
       }

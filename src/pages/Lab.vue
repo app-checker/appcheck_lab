@@ -193,7 +193,8 @@ async function handleBindFile(event: Event) {
     apkFileTree.value = await analyze.getFileTree()
     const apkManifest = await apk.getApkManifest()
     arch.value = analyze.getArchAsString()
-    const _libs = (await analyze.getLibs()).map(item=> {
+    const rawLibs = await analyze.getLibs()
+    const _libs = rawLibs.map(item=> {
       const lib = apkRules.find(item)
       if (!lib) return <ApkRuleItemModel>{
         name: item,
@@ -202,7 +203,7 @@ async function handleBindFile(event: Event) {
       return lib
     })
     libs.value = _libs
-    technology.value = await analyze.getTechnology()
+    technology.value = await analyze.getTechnology(rawLibs)
     data.value = apkManifest
   } catch (error) {
     const msg = (error as Error).message
