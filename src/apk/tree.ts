@@ -1,3 +1,4 @@
+import fileSize from '@/shared/filesize/filesize'
 import * as ZIP from 'jszip'
 
 interface ApkTree {
@@ -8,6 +9,7 @@ export interface ZipTree {
   filename: string,
   isDirectory: boolean,
   object?: ZIP.JSZipObject,
+  size?: string,
   children?: ZipTree[]
 }
 
@@ -95,10 +97,16 @@ export class ApkTreeImpl implements ApkTree {
 
     })
 
+    let size = (file as any)._data.uncompressedSize
+    if (typeof size !== 'number') {
+      size = 0
+    }
+    const humanSize = fileSize(size)
     tmp!.push({
       filename: filename,
       isDirectory: false,
       object: file,
+      size: humanSize,
     })
   }
 

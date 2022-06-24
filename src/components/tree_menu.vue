@@ -5,16 +5,19 @@
   </ul>
 
   <li v-else @click.stop="toggle(model)">
-    <div style="display: flex; align-items: center; cursor: pointer;">
-      <svg-icon :style="{
+    <div style="display: flex; align-items: center; cursor: pointer; justify-content: space-between;">
+      <div style="display: flex; align-items: center; cursor: pointer">
+        <svg-icon :style="{
         transform: `rotate(${open ? '90' : '0'}deg)`,
-        transition: `all .3s`,
-      }" class="svg_icon" v-if="hasChild(model)" name="arrow" :width="14" :height="14" />
-      <svg-icon v-else :name="icon" />
-      <div style="width: 6px"></div>
-      <p>
-        {{ model.filename }}
-      </p>
+          transition: `all .3s`,
+        }" class="svg_icon" v-if="hasChild(model)" name="arrow" :width="14" :height="14" />
+        <svg-icon v-else :name="icon" />
+        <div style="width: 6px"></div>
+        <p>
+          {{ model.filename }}
+        </p>
+      </div>
+      <div style="font-size: 14px">{{ model.size }}</div>
     </div>
     <ul v-if="hasChild(model) && open" style="margin-left: 12px">
       <tree-menu :model="model.children" />
