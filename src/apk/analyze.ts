@@ -184,6 +184,27 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     return findOnce.length > 0
   }
 
+  async #isUsedReactNative(): Promise<boolean> {
+    const lib = await this.getLibs();
+    const includes = [
+      'libfb.so',
+      'libfolly_json.so',
+      'libglog.so',
+      'libglog_init.so',
+      // 'libgnustl_shared.so',
+      'libjsc.so',
+      'libreactnativejni.so',
+      'libyoga.so'
+    ]
+    for (const item of lib) {
+      const index = includes.indexOf(item)
+      if (index >= 0) {
+        includes.splice(index, 1)
+      }
+    }
+    return includes.length == 0
+  }
+
   async getTechnology(): Promise<ApkTechnologyModel[]> {
     const resultKey: ApkTechnologyID[] = []
 
@@ -195,6 +216,10 @@ class ApkAnalyzeImpl implements ApkAnalyze {
       {
         id: ApkTechnologyID.flutter,
         run: this.#isUsedFlutter,
+      },
+      {
+        id: ApkTechnologyID.reactNative,
+        run: this.#isUsedReactNative,
       },
       {
         id: ApkTechnologyID.uniapp,
