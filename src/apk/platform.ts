@@ -4,6 +4,7 @@ export enum ApkTechnologyID {
   uniapp = 'uniapp',
   reactNative = 'react_native',
   iapp = 'iapp',
+  cordova = 'cordova',
 }
 
 // enum ApkTechnologyType {
@@ -63,7 +64,13 @@ const data: ApkTechnologyModel[] = [
     desc: 'IApp是一款手机端的一款软件开发软件。 容易上手，轻松开发出自己的软件。 编程语言是俗语言Java的扩展性语言。 IApp 只需要懂一点英语的人都能凭借自己的智商走出一片天。',
     link: 'http://www.yougais.com/',
     icon: 'http://v.dayx.cn:93/images/201607010702506386.png',
-  }
+  },
+  {
+    id: ApkTechnologyID.cordova,
+    desc: 'cordova是一个开源的移动开发框架。 允许你用标准的web技术-HTML5,CSS3和JavaScript做跨平台（android、ios、windows等）开发。 应用在每个平台的具体执行被封装了起来，并依靠符合标准的API绑定去访问每个设备的功能，比如说：传感器、数据、网络状态。',
+    link: 'https://cordova.apache.org/',
+    icon: 'cordova_logo',
+  },
 ]
 
 const dataMap = new Map<ApkTechnologyID, ApkTechnologyModel>(data.map(item=> [ item.id, item ]))

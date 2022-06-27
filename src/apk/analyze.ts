@@ -220,6 +220,28 @@ class ApkAnalyzeImpl implements ApkAnalyze {
     return includes.length == 0
   }
 
+  async #isUseCordova(): Promise<boolean> {
+
+    const easyJoin = (path: string): string=> 'assets/www/' + path
+    const easyGetFile = (path: string): JSZip.JSZipObject | undefined => this.#files.get(easyJoin(path))
+
+    const CORDOVA_SRC_SYB = 'cordova-js-src'
+
+    /**
+     * FIXME: 不严谨的检测。。
+     * @link https://github.com/apache/cordova-android/tree/master/cordova-js-src
+     */
+    const includes = [
+      'cordova.js',
+      `${ CORDOVA_SRC_SYB }/exec.js`,
+      `${ CORDOVA_SRC_SYB }/platform.js`,
+      `${ CORDOVA_SRC_SYB }/android/nativeapiprovider.js`,
+      `${ CORDOVA_SRC_SYB }/android/promptbasednativeapi.js`,
+    ]
+    const _is = includes.every(item=> !!easyGetFile(item))
+    return _is
+  }
+
   async getTechnology(libs?: string[]): Promise<ApkTechnologyModel[]> {
     const resultKey: ApkTechnologyID[] = []
 
@@ -241,6 +263,10 @@ class ApkAnalyzeImpl implements ApkAnalyze {
       {
         id: ApkTechnologyID.uniapp,
         run: this.#isUsedUniapp,
+      },
+      {
+        id: ApkTechnologyID.cordova,
+        run: this.#isUseCordova,
       },
       {
         id: ApkTechnologyID.iapp,
