@@ -52,7 +52,12 @@
       </ul>
 
       <ul v-else-if="apkMenuBarCurrent == apkMenuBarAction.native">
-        <li :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; display: flex; justify-content: space-between; padding: 12px;align-items: center;" v-for="(item, index) in libs" :key="index">
+        <div v-if="libIsEmpty" style="display: flex; justify-content:center; align-items: center; margin: 12vh 0 0">
+          <svgIcon name="empty" :width="42" style="position: relative;top: -2px; opacity: .8  ;" />
+          <div style="width: .8rem;"></div>
+          <p style="font-size: 18px; font-weight: bold">无原生库 :)</p>
+        </div>
+        <li v-else :title="item.label" style="border: 1px solid rgb(190 190 190); margin: 12px; border-radius: 6px; display: flex; justify-content: space-between; padding: 12px;align-items: center;" v-for="(item, index) in libs" :key="index">
           <div>{{ item.name }}</div>
           <div v-if="item.label" style="border: 1px solid #333;padding: 6px;border-radius: 12px;cursor: pointer;" @click="handleClickNativeLib(item)">{{ item.label }}</div>
         </li>
@@ -159,6 +164,10 @@ const isParsing = ref<boolean>(false)
 const parsingError = ref<string>('')
 
 const apkFileTree = ref<ZipTree[]>([])
+
+const libIsEmpty = computed(()=> {
+  return libs.value.length <= 0
+})
 
 const permissions = computed<PermissionsData.permissionModal[]>(()=> {
   const value = data.value
