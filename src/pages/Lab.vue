@@ -64,7 +64,7 @@
       </ul>
 
       <div v-else>
-        <treeMenu :model="apkFileTree" />
+        <treeMenu :model="apkFileTree" @click-file="handleClickTreeOnceFile" />
       </div>
 
     </div>
@@ -226,6 +226,11 @@ async function handleClickNativeLib(item: ApkRuleItemModel) {
   bottomModalData.value = data
   bottomModalVue.value?.showModal()
 }
+
+function handleClickTreeOnceFile(file: ZipTree) {
+  console.log('the action expored to file', file)
+}
+
 </script>
 
 <style scoped>
