@@ -117,6 +117,7 @@ import { ZipTree } from '@/apk/tree';
 import treeMenu from '@/components/tree_menu.vue';
 import { ApkTechnologyModel } from '@/apk/platform';
 import svgIcon from '@/components/svg_icon.vue';
+import { ApkPreview } from '@/apk/preview'
 
 const apkRules = new ApkRules();
 
@@ -228,7 +229,10 @@ async function handleClickNativeLib(item: ApkRuleItemModel) {
 }
 
 function handleClickTreeOnceFile(file: ZipTree) {
-  console.log('the action expored to file', file)
+  const { object } = file
+  if (!object) return
+  const apkPreview = new ApkPreview(object)
+  console.log(apkPreview.fileType)
 }
 
 </script>
