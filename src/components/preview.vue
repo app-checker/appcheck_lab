@@ -29,8 +29,8 @@
             <p style="margin-left: 12px">二进制文件不支持预览:(</p>
           </div>
           <div v-else-if="apkPreview?.fileType == FileType.IMAGE">
-            <img ref="previewImageRef" :src="image" />
-            <div>
+            <img ref="previewImageRef" :src="image" alt="预览图片" />
+            <div v-if="!imageIsGIF">
               <button @click="handleExportImage">导出图片</button>
             </div>
           </div>
@@ -83,11 +83,20 @@ const previewImageRef = ref()
 const currentTab = ref<number>(0)
 const apkPreview = ref<ApkPreview | null>(null)
 const text = ref<string>("")
+const imageFilename = computed<string>(()=> {
+  return apkPreview.value?.file.name.replace(/^.*[\\\/]/, '') ?? ""
+})
+// NOTE: gif 手动保存呗
+const imageIsGIF = computed<boolean>(()=> {
+  return imageFilename.value.split('.').pop()?.toLocaleLowerCase() == 'gif'
+})
 const image = computed<string>(()=> {
   const _text = text.value
+  const ext = imageFilename.value.split('.').pop()
   // FIXME: 默认图片
   if (!_text) return ""
-  return `data:image/png;base64,${ _text }`
+  // FIXME: `gif` 不支持
+  return `data:image/${ ext };base64,${ _text }`
 })
 
 async function show(file: JSZip.JSZipObject) {
@@ -117,7 +126,7 @@ function handleClickTab(index: number) {
 }
 
 function handleExportImage() {
-  const imageFilename = apkPreview.value?.file.name.replace(/^.*[\\\/]/, '')
+  const _imageFilename = imageFilename.value
   const image = previewImageRef.value as HTMLImageElement
   if (!image) return
   const canvas = document.createElement('canvas')
@@ -130,7 +139,7 @@ function handleExportImage() {
   const url = canvas.toDataURL('image/png')
   const a = document.createElement('a')
   const event = new MouseEvent('click')
-  a.download = imageFilename ?? "default.png"
+  a.download = _imageFilename ?? "default.png"
   a.href = url
   a.dispatchEvent(event)
 }
