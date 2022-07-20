@@ -15,11 +15,14 @@
             <p>{{ item.title }}</p>
           </a>
         </div>
-        <div @click="isShow = false" class="close-icon">
-          <svg width="24px" height="24px" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 8L40 40"  stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M8 40L40 8"  stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+        <div style="display: flex; align-items: center">
+           <button :style="copyButtonStyleX" @click="handleCopyClipboard">复制到剪贴板</button>
+           <div @click="isShow = false" class="close-icon">
+             <svg width="24px" height="24px" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path d="M8 8L40 40"  stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+               <path d="M8 40L40 8"  stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+             </svg>
+           </div>
         </div>
       </div>
       <div class="content">
@@ -48,10 +51,12 @@
 
 <script setup lang="ts">
 import JSZip from 'jszip';
-import { ref, computed } from 'vue'
+import { ref, computed, CSSProperties } from 'vue'
 import { ApkPreview } from '@/apk/preview'
 import { FileType } from '@/apk/filetypes'
 import SvgIcon from './svg_icon.vue';
+
+import copy from '@/shared/clipboard-copy'
 
 const isShow = ref<boolean>(false)
 
@@ -99,6 +104,27 @@ const image = computed<string>(()=> {
   return `data:image/${ ext };base64,${ _text }`
 })
 
+const isTextPreview = computed<boolean>(()=> {
+  const isText = apkPreview.value?.fileType == FileType.TEXT
+  const isTab = currentTab.value == 0
+  return isText && isTab
+})
+
+const copyButtonStyleX = computed<CSSProperties>(()=> {
+  const _ = isTextPreview.value
+  const transPX = _ ? 0 : 66
+  const opacity = _ ? 1 : 0
+  const pointerEvents = _ ? 'all' : 'none'
+  return {
+    marginTop: `0px`,
+    marginRight: `12px`,
+    pointerEvents,
+    opacity,
+    transform: `translateX(-${ transPX }px)`,
+    transition: `all .24s`,
+  }
+})
+
 async function show(file: JSZip.JSZipObject) {
   currentTab.value = 0
   const _ = new ApkPreview(file)
@@ -142,6 +168,11 @@ function handleExportImage() {
   a.download = _imageFilename ?? "default.png"
   a.href = url
   a.dispatchEvent(event)
+}
+
+async function handleCopyClipboard() {
+  await copy(text.value)
+  alert('复制到剪贴板成功!')
 }
 </script>
 
