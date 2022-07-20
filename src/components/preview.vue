@@ -29,7 +29,10 @@
             <p style="margin-left: 12px">二进制文件不支持预览:(</p>
           </div>
           <div v-else-if="apkPreview?.fileType == FileType.IMAGE">
-            <img :src="image" />
+            <img ref="previewImageRef" :src="image" />
+            <div>
+              <button @click="handleExportImage">导出图片</button>
+            </div>
           </div>
           <div style="text-align: left" v-else>
             {{  text }}
@@ -76,6 +79,7 @@ const tabs = [
   }
 ]
 
+const previewImageRef = ref()
 const currentTab = ref<number>(0)
 const apkPreview = ref<ApkPreview | null>(null)
 const text = ref<string>("")
@@ -110,6 +114,25 @@ function handleClickBackdrop() {
 
 function handleClickTab(index: number) {
   currentTab.value = index
+}
+
+function handleExportImage() {
+  const imageFilename = apkPreview.value?.file.name.replace(/^.*[\\\/]/, '')
+  const image = previewImageRef.value as HTMLImageElement
+  if (!image) return
+  const canvas = document.createElement('canvas')
+  canvas.width = image.width
+  canvas.height = image.height
+
+  const context = canvas.getContext('2d')
+  if (!context) return
+  context.drawImage(image, 0, 0, image.width, image.height)
+  const url = canvas.toDataURL('image/png')
+  const a = document.createElement('a')
+  const event = new MouseEvent('click')
+  a.download = imageFilename ?? "default.png"
+  a.href = url
+  a.dispatchEvent(event)
 }
 </script>
 
@@ -228,5 +251,27 @@ function handleClickTab(index: number) {
 
 .close-icon:hover path {
   stroke: red;
+}
+
+button {
+  position: relative;
+  border: 0px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 12px 30px;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  overflow: visible;
+  margin-left: 0;
+  transform: translate(0px,0px);
+  margin-right: 0;
+  border-radius: 12px;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 12px;
 }
 </style>
