@@ -103,6 +103,7 @@
   </div>
 
   <bottomModal :data="bottomModalData" ref="bottomModalVue" />
+  <previewVue :backdrop-close="true" ref="previewVueRef" />
 </template>
 
 <script setup lang="ts">
@@ -112,12 +113,12 @@ import { ApkAnalyzeImpl } from '@/apk/analyze';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules, ReApkRuleItemModel } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
 import appIconVue from '@/components/appicon.vue'
+import previewVue from '@/components/preview.vue';
 import * as PermissionsData from '@/apk/permission'
 import { ZipTree } from '@/apk/tree';
 import treeMenu from '@/components/tree_menu.vue';
 import { ApkTechnologyModel } from '@/apk/platform';
 import svgIcon from '@/components/svg_icon.vue';
-import { ApkPreview } from '@/apk/preview'
 
 const apkRules = new ApkRules();
 
@@ -149,6 +150,8 @@ const apkMenuBar = [
 const apkMenuBarCurrent = ref<apkMenuBarAction>(apkMenuBarAction.permission)
 
 const bottomModalVue = ref<InstanceType<typeof bottomModal>>()
+
+const previewVueRef = ref<InstanceType<typeof previewVue>>()
 
 const data = ref<ApkManifest | null>()
 
@@ -230,9 +233,8 @@ async function handleClickNativeLib(item: ApkRuleItemModel) {
 
 function handleClickTreeOnceFile(file: ZipTree) {
   const { object } = file
-  if (!object) return
-  const apkPreview = new ApkPreview(object)
-  console.log(apkPreview.fileType)
+  if (!object) return  
+  previewVueRef.value?.show(object)
 }
 
 </script>
