@@ -64,7 +64,7 @@
       </ul>
 
       <div v-else>
-        <treeMenu :model="apkFileTree" />
+        <treeMenu :model="apkFileTree" @click-file="handleClickTreeOnceFile" />
       </div>
 
     </div>
@@ -103,6 +103,7 @@
   </div>
 
   <bottomModal :data="bottomModalData" ref="bottomModalVue" />
+  <previewVue :backdrop-close="true" ref="previewVueRef" />
 </template>
 
 <script setup lang="ts">
@@ -112,6 +113,7 @@ import { ApkAnalyzeImpl } from '@/apk/analyze';
 import { ApkNativeLibItemModel, ApkRuleItemModel, ApkRules, ReApkRuleItemModel } from '@/apk/rules';
 import bottomModal from '@/components/bottom_modal.vue'
 import appIconVue from '@/components/appicon.vue'
+import previewVue from '@/components/preview.vue';
 import * as PermissionsData from '@/apk/permission'
 import { ZipTree } from '@/apk/tree';
 import treeMenu from '@/components/tree_menu.vue';
@@ -148,6 +150,8 @@ const apkMenuBar = [
 const apkMenuBarCurrent = ref<apkMenuBarAction>(apkMenuBarAction.permission)
 
 const bottomModalVue = ref<InstanceType<typeof bottomModal>>()
+
+const previewVueRef = ref<InstanceType<typeof previewVue>>()
 
 const data = ref<ApkManifest | null>()
 
@@ -226,6 +230,13 @@ async function handleClickNativeLib(item: ApkRuleItemModel) {
   bottomModalData.value = data
   bottomModalVue.value?.showModal()
 }
+
+function handleClickTreeOnceFile(file: ZipTree) {
+  const { object } = file
+  if (!object) return  
+  previewVueRef.value?.show(object)
+}
+
 </script>
 
 <style scoped>

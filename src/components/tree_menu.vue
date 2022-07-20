@@ -1,7 +1,7 @@
 <template>
 
   <ul v-if="isArray(model)">
-    <tree-menu v-for="item in model" :key="item.id" :model="item" />
+    <tree-menu v-for="item in model" :key="item.id" :model="item" @click-file="handleClick" />
   </ul>
 
   <li v-else @click.stop="toggle(model)">
@@ -19,8 +19,8 @@
       </div>
       <div style="font-size: 14px">{{ model.size }}</div>
     </div>
-    <ul v-if="hasChild(model) && open" style="margin-left: 12px">
-      <tree-menu :model="model.children" />
+    <ul @click.stop="" v-if="hasChild(model) && open" style="margin-left: 12px">
+      <tree-menu :model="model.children" @click-file="handleClick"/>
     </ul>
   </li>
 
@@ -33,6 +33,10 @@ import treeMenu from './tree_menu.vue'
 import svgIcon from './svg_icon.vue'
 import { computed } from '@vue/reactivity';
 import { ZipTree } from '@/apk/tree';
+
+const emit = defineEmits<{
+  (event: 'clickFile', value: ZipTree): void
+}>()
 
 const props = defineProps({
   model: {
@@ -70,10 +74,17 @@ const hasChild = (item: any) => {
   return item.hasOwnProperty('children') && item.children.length > 0
 }
 
-function toggle(item: any) {
-  if (hasChild(item)) {
+async function toggle(item: any) {
+  const _has = hasChild(item)
+  if (_has) {
     open.value = !open.value
+    return
   }
+  emit('clickFile', item)
+}
+
+function handleClick(item: ZipTree) {
+  emit('clickFile', item)
 }
 </script>
 
