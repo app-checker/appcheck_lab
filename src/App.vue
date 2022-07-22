@@ -17,4 +17,8 @@ import Lab from './pages/Lab.vue'
   display: flex;
   justify-content: center;
 }
+
+body {
+  background-image: url(/src/assets/dots.png);
+}
 </style>
