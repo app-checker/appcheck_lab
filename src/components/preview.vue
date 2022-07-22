@@ -32,8 +32,13 @@
             <p style="margin-left: 12px">二进制文件不支持预览:(</p>
           </div>
           <div v-else-if="apkPreview?.fileType == FileType.IMAGE">
-            <img ref="previewImageRef" :src="image" alt="预览图片" />
-            <div v-if="!imageIsGIF">
+            <template v-if="imageIsSVG">
+              <div style="max-width: 100%; max-height: 100%;" v-html="svgImage"></div> 
+            </template>
+            <template v-else>
+              <img ref="previewImageRef" :src="image" alt="预览图片" />
+            </template>
+            <div v-if="!imageIsGIF && !imageIsSVG">
               <button @click="handleExportImage">导出图片</button>
             </div>
           </div>
@@ -95,6 +100,18 @@ const imageFilename = computed<string>(()=> {
 const imageIsGIF = computed<boolean>(()=> {
   return imageFilename.value.split('.').pop()?.toLocaleLowerCase() == 'gif'
 })
+
+const imageIsSVG = computed<boolean>(()=> {
+  return imageFilename.value.split('.').pop()?.toLocaleLowerCase() == 'svg'
+})
+
+const svgImage = computed<string>(()=> {
+  const val = text.value
+  if (!imageIsSVG.value) return ""
+  const exec = atob(val)
+  return exec
+})
+
 const image = computed<string>(()=> {
   const _text = text.value
   const ext = imageFilename.value.split('.').pop()
